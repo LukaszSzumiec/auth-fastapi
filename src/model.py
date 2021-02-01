@@ -9,3 +9,4 @@ class User(Base):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, index=True)
     username = sqlalchemy.Column(sqlalchemy.String, unique=True, index=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String)
+    

@@ -6,8 +6,14 @@ from ..scheme import UserCreate
 from ..utils import get_password_hash
 
 
-def get_user(db: Session, username: int):
-    return db.query(model.User).filter(model.User.username == username).first()
+def get_user(db: Session, id: int):
+    return db.query(model.User).filter(model.User.id == id).first()
+
+
+def get_user_by_username(db: Session, username: int):
+    print(username)
+    user = db.query(model.User).filter(model.User.username == username).first()
+    return user
 
 
 def get_users(db: Session, skip: int = 0, limit: int = 100):

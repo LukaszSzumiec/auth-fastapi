@@ -49,7 +49,6 @@ class UserCreate(UserBase):
 
 class User(UserBase):
     id: int
-    localizations: List[Localization] = []
 
     class Config:
         orm_mode = True

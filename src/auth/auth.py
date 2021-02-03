@@ -16,7 +16,6 @@ SECRET_REFRESH = os.environ.get('SECRET_REFRESH', 'refresh_secret')
 
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
-REFRESH_TOKEN_EXPIRE_MINUTES = 1440
 
 credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -86,29 +85,3 @@ async def get_current_user(security_scopes: SecurityScopes, token: str = Depends
                 headers={"WWW-Authenticate": authenticate_value},
             )
     return user
-
-
-# def auth_by_refresh_token(token: str, db):
-#     payload = jwt.decode(str(token), SECRET_REFRESH, algorithms=[ALGORITHM])
-#     try:
-#         _id: int = int(payload.get('sub'))
-#         if _id is None:
-#             raise HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail='No',
-#         headers={'WWW-Authenticate': 'Bearer'},
-#     )
-#     except JWTError:
-#         raise HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail='No 2',
-#         headers={'WWW-Authenticate': 'Bearer'},
-#     )
-#     user = get_user(db, id=_id)
-#     if user is None:
-#         raise HTTPException(
-#         status_code=status.HTTP_401_UNAUTHORIZED,
-#         detail='No 3',
-#         headers={'WWW-Authenticate': 'Bearer'},
-#     )
-#     return user

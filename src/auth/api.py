@@ -7,26 +7,12 @@ from fastapi_jwt_auth.exceptions import AuthJWTException
 from pydantic import BaseModel
 from typing import Optional
 
-from .auth import get_current_user, authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES
+from .auth import get_current_user, authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
 from .crud import create_user
 from ..database import get_db
 from ..scheme import User, Token, UserCreate, UserLogin
 
 router_auth = APIRouter()
-
-
-@router_auth.get('/api/users/me', response_model=User)
-async def get_me(db = Depends(get_db), current_user: User = Depends(get_current_user)):
-    """Endpoint returns current logged user.
-
-    Args:
-        current_user: logged in User object.
-
-    Returns:
-        Returns logged in user instance.
-
-    """
-    return current_user
 
 
 @router_auth.post('/api/register/', response_model=User)
@@ -48,7 +34,7 @@ async def register_user(form_data: UserCreate = Depends(UserCreate.as_form), db=
 
 @router_auth.post('/api/token/')
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
-    user = authenticate_user(db, user.username, user.password)
+    user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -56,17 +42,15 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db=Depends(get
             headers={'WWW-Authenticate': 'Bearer'},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={'sub': str(user.id), 'scopes': user.scopes}, expires_delta=access_token_expires
-    )
+    print(user.scopes.split(' '))
+    access_token = create_access_token(data={'sub': str(user.id), 'scopes': user.scopes.split(' ')}, expires_delta=access_token_expires)
     return {'access_token': access_token, 'type': 'Bareer', 'success': True, 'expire_time': ACCESS_TOKEN_EXPIRE_MINUTES}
 
 
 @router_auth.get('/api/refresh')
-async def refresh(db = Depends(get_db), current_user: User = Security(get_current_user)
-):
+async def refresh(db = Depends(get_db), current_user: User = Depends(get_current_user)):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={'sub': str(current_user.id)}, expires_delta=access_token_expires
+        data={'sub': str(current_user.id), 'scopes': current_user.scopes.split(' ')}, expires_delta=access_token_expires
     )
     return {'access_token': access_token, 'type': 'Bareer', 'success': True, 'expire_time': ACCESS_TOKEN_EXPIRE_MINUTES}

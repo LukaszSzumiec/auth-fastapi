@@ -54,7 +54,6 @@ def test_get_me():
                           headers={'Authorization':
                                        f'Bearer {access_token}'
                                    })
-    print(response.json())
     assert response.status_code == 200
     assert response.json().get('username') == 'test'
 

@@ -1,5 +1,5 @@
-from fastapi import Depends, HTTPException, status, APIRouter
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import Depends, HTTPException, status, APIRouter, Security
+from fastapi.security import OAuth2PasswordRequestForm, SecurityScopes
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 from typing import Optional
@@ -55,55 +55,60 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_db)):
-    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+async def get_current_user(security_scopes: SecurityScopes, token: str = Depends(oauth2_scheme), db=Depends(get_db)):
+    if security_scopes.scopes:
+        authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+    else:
+        authenticate_value = f"Bearer"
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": authenticate_value},
+    )
+
     try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         _id: int = int(payload.get('sub'))
         if _id is None:
-            raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='No kurwa',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
+            raise credentials_exception
+        token_scopes = payload.get("scopes", [])
+        token_data = TokenData(scopes=token_scopes, id=_id)
     except JWTError:
-        raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='No kurwa 2',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
+        raise credentials_exception
     user = get_user(db, id=_id)
     if user is None:
-        raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='No kurwa 3',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
+        raise credentials_exception
+    for scope in security_scopes.scopes:
+        if scope not in token_data.scopes:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not enough permissions",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
     return user
 
 
-def auth_by_refresh_token(token: str, db):
-    print(token)
-    payload = jwt.decode(str(token), SECRET_REFRESH, algorithms=[ALGORITHM])
-    try:
-        _id: int = int(payload.get('sub'))
-        print(_id)
-        if _id is None:
-            raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='No kurwa',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
-    except JWTError:
-        raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='No kurwa 2',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
-    user = get_user(db, id=_id)
-    if user is None:
-        raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail='No kurwa 3',
-        headers={'WWW-Authenticate': 'Bearer'},
-    )
-    return user
+# def auth_by_refresh_token(token: str, db):
+#     payload = jwt.decode(str(token), SECRET_REFRESH, algorithms=[ALGORITHM])
+#     try:
+#         _id: int = int(payload.get('sub'))
+#         if _id is None:
+#             raise HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail='No',
+#         headers={'WWW-Authenticate': 'Bearer'},
+#     )
+#     except JWTError:
+#         raise HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail='No 2',
+#         headers={'WWW-Authenticate': 'Bearer'},
+#     )
+#     user = get_user(db, id=_id)
+#     if user is None:
+#         raise HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail='No 3',
+#         headers={'WWW-Authenticate': 'Bearer'},
+#     )
+#     return user

@@ -11,7 +11,6 @@ def get_user(db: Session, id: int):
 
 
 def get_user_by_username(db: Session, username: int):
-    print(username)
     user = db.query(model.User).filter(model.User.username == username).first()
     return user
 

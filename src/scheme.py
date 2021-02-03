@@ -32,10 +32,12 @@ def as_form(cls: Type[BaseModel]):
 class Token(BaseModel):
     access_token: str
     token_type: str
+    scopes: List[str] = []
 
 
 class TokenData(BaseModel):
-    username: Optional[str] = None
+    id: Optional[int] = None
+    scopes: List[str] = []
 
 
 class UserBase(BaseModel):
@@ -44,6 +46,12 @@ class UserBase(BaseModel):
 
 @as_form
 class UserCreate(UserBase):
+    password: str = Field(...)
+    is_superuser: str = Field(...)
+
+
+@as_form
+class UserLogin(UserBase):
     password: str = Field(...)
 
 

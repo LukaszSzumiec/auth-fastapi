@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from .auth import get_current_user, authenticate_user, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
-from .crud import create_user
+from .crud import create_user, get_users
 from ..database import get_db
 from ..scheme import User, Token, UserCreate, UserLogin
 

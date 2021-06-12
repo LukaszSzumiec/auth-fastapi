@@ -11,7 +11,8 @@ from ..database import get_db
 from ..utils import verify_password, oauth2_scheme
 
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'secret_key')
+# SECRET_KEY = os.environ.get('SECRET_KEY', 'kadsnfokiwnefoinqOWNOInnfONonfoiNFOIfnioN')
+SECRET_KEY = 'kadsnfokiwnefoinqOWNOInnfONonfoiNFOIfnioN'
 SECRET_REFRESH = os.environ.get('SECRET_REFRESH', 'refresh_secret')
 
 ALGORITHM = 'HS256'

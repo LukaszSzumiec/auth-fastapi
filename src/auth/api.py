@@ -34,6 +34,9 @@ async def register_user(form_data: UserCreate = Depends(UserCreate.as_form), db=
 
 @router_auth.post('/api/token/')
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
+    """
+    
+    """
     user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -42,13 +45,18 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends(), db=Depends(get
             headers={'WWW-Authenticate': 'Bearer'},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    print(user.scopes.split(' '))
     access_token = create_access_token(data={'sub': str(user.id), 'scopes': user.scopes.split(' ')}, expires_delta=access_token_expires)
     return {'access_token': access_token, 'type': 'Bareer', 'success': True, 'expire_time': ACCESS_TOKEN_EXPIRE_MINUTES}
 
 
 @router_auth.get('/api/refresh')
 async def refresh(db = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """
+    Refresh access token.
+    
+    Returns:
+        Return new access token.
+    """
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={'sub': str(current_user.id), 'scopes': current_user.scopes.split(' ')}, expires_delta=access_token_expires
